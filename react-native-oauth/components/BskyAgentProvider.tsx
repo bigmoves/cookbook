@@ -1,37 +1,35 @@
 import { PropsWithChildren, createContext, useContext, useMemo } from 'react'
-import { Agent } from '@atproto/api'
+import { Client } from '@atproto/lex-client'
 import { useSession } from './SessionProvider'
 
 /**
- * An unauthenticated {@link Agent} instance, that can be used to perform
+ * An unauthenticated {@link Client} instance, that can be used to perform
  * unauthenticated requests directly towards the Bluesky API.
  */
-const unauthenticatedAgent = new Agent('https://api.bsky.app')
+const unauthenticatedClient = new Client({ service: 'https://api.bsky.app' })
 
-const BskyAgentContext = createContext(unauthenticatedAgent)
+const BskyAgentContext = createContext(unauthenticatedClient)
 
 export function BskyAgentProvider({ children }: PropsWithChildren) {
   const { session } = useSession()
 
   /**
-   * An agent that will perform authenticated requests towards the Bluesky
-   * API, by proxying requests through the user's PDS.
+   * A client that will perform authenticated requests towards the Bluesky
+   * API, by proxying requests through the user's PDS. The `service` option
+   * sets the `atproto-proxy` header that routes the request to the appview.
    *
    * @note Requires that at least one `rpc:` OAuth scope with
    * `aud=did:web:api.bsky.app#bsky_appview` is granted during the OAuth flow,
    * otherwise the PDS will reject any proxying attempts.
    */
-  const authenticatedAgent = useMemo(() => {
+  const authenticatedClient = useMemo(() => {
     if (!session) return null
-    const agent: Agent = new Agent(session)
-    agent.assertAuthenticated()
-    agent.configureProxy('did:web:api.bsky.app#bsky_appview')
-    return agent
+    return new Client(session, { service: 'did:web:api.bsky.app#bsky_appview' })
   }, [session])
 
   return (
     <BskyAgentContext.Provider
-      value={authenticatedAgent || unauthenticatedAgent}
+      value={authenticatedClient || unauthenticatedClient}
     >
       {children}
     </BskyAgentContext.Provider>
@@ -39,30 +37,34 @@ export function BskyAgentProvider({ children }: PropsWithChildren) {
 }
 
 /**
- * Returns an unauthenticated {@link Agent} to perform requests towards the
- * Bluesky API. Using an unauthenticated agent will result in faster requests
+ * Returns an unauthenticated {@link Client} to perform requests towards the
+ * Bluesky API. Using an unauthenticated client will result in faster requests
  * (since no proxying will be involved), but only public data can be accessed.
  */
 export function useUnauthenticatedBskyAgent() {
-  return unauthenticatedAgent
+  return unauthenticatedClient
 }
 
 /**
- * Returns an {@link Agent} to perform requests towards the Bluesky API. Use
- * {@link Agent.did `agent.did`} to determine if the agent is authenticated or
- * not (if `undefined`, the agent is unauthenticated).
+ * Returns a {@link Client} to perform requests towards the Bluesky API. Use
+ * `client.agent.did` to determine if the client is authenticated or not (if
+ * `undefined`, the client is unauthenticated).
  */
 export function useBskyAgent() {
   return useContext(BskyAgentContext)
 }
 
 /**
- * Like {@link useBskyAgent}, but will throw if the agent is not authenticated
+ * Like {@link useBskyAgent}, but will throw if the client is not authenticated
  * (i.e. used from non-logged in routes). Allows to retrieve the currently
- * authenticated user's DID by accessing {@link Agent.did `agent.did`}.
+ * authenticated user's DID by accessing `client.agent.did`.
  */
 export function useAuthenticatedBskyAgent() {
-  const agent: Agent = useBskyAgent()
-  agent.assertAuthenticated()
-  return agent
+  const client = useBskyAgent()
+  if (!client.agent.did) {
+    throw new Error(
+      'useAuthenticatedBskyAgent should only be used from authenticated contexts'
+    )
+  }
+  return client
 }

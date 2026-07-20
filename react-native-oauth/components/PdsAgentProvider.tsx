@@ -1,35 +1,40 @@
 import { PropsWithChildren, createContext, useContext, useMemo } from 'react'
-import { Agent } from '@atproto/api'
+import { Client } from '@atproto/lex-client'
 import { useSession } from './SessionProvider'
 
-export type PdsAgent = Agent & { did: string }
-
-export const PdsAgentContext = createContext<PdsAgent | null>(null)
+/**
+ * A {@link Client} bound to the user's OAuth session, used to make
+ * authenticated requests directly towards the user's PDS.
+ *
+ * @note An `OAuthSession` already satisfies lex-client's `Agent` interface (it
+ * exposes both `did` and `fetchHandler`), so it can be passed straight into
+ * `new Client(session)` without any adapter.
+ */
+export const PdsAgentContext = createContext<Client | null>(null)
 
 export function PdsAgentProvider({ children }: PropsWithChildren) {
   const { session } = useSession()
 
-  const agent = useMemo<PdsAgent | null>(() => {
+  const client = useMemo<Client | null>(() => {
     if (!session) return null
-    const agent: Agent = new Agent(session)
-    agent.assertAuthenticated()
-    return agent
+    return new Client(session)
   }, [session])
 
   return (
-    <PdsAgentContext.Provider value={agent}>
+    <PdsAgentContext.Provider value={client}>
       {children}
     </PdsAgentContext.Provider>
   )
 }
 
 /**
- * Returns an authenticated {@link Agent} to perform requests towards the
- * user's PDS. Will throw if used outside of an authenticated context.
+ * Returns an authenticated {@link Client} to perform requests towards the
+ * user's PDS. Will throw if used outside of an authenticated context. The
+ * authenticated user's DID is available via `client.agent.did`.
  */
-export function usePdsAgent(): PdsAgent {
-  const agent = useContext(PdsAgentContext)
-  if (agent) return agent
+export function usePdsAgent(): Client {
+  const client = useContext(PdsAgentContext)
+  if (client) return client
 
   throw new Error('usePdsAgent should only be used from authenticated contexts')
 }
