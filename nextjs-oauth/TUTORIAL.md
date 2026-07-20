@@ -10,7 +10,7 @@ See this up and running at: https://nextjs-oauth-tutorial.up.railway.app/
 
 ## Prerequisites
 
-- Node.js 20+
+- Node.js 22+
 - pnpm (or npm/yarn)
 - Basic familiarity with Next.js and TypeScript
 
@@ -515,7 +515,9 @@ interface AuthSessionTable {
 Create `lib/db/migrations.ts`:
 
 ```typescript
-import { Kysely, Migration, Migrator } from "kysely";
+import { Kysely } from "kysely";
+import { Migrator } from "kysely/migration";
+import type { Migration } from "kysely/migration";
 import { getDb } from ".";
 
 const migrations: Record<string, Migration> = {
