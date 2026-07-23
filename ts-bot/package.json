@@ -3,23 +3,24 @@
   "version": "1.0.0",
   "description": "Starter template for a Bluesky bot using the @atproto/lex client",
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "lexicons": "lex install app.bsky.feed.post",
-    "build": "lex build --index-file",
-    "typecheck": "tsc --noEmit",
+    "build": "lex build --clear --index-file --import-ext .ts",
+    "typecheck": "tsc",
     "prestart": "npm run build",
-    "start": "tsx index.ts"
+    "start": "node index.ts"
   },
   "dependencies": {
     "@atproto/lex": "^0.3.0",
-    "@atproto/lex-client": "^0.3.0",
     "@atproto/lex-password-session": "^0.1.8",
     "cron": "^3.1.0",
     "dotenv": "^16.3.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
-    "tsx": "^4.19.2",
     "typescript": "^5.9.2"
   }
 }

@@ -2,12 +2,13 @@
 
 This folder contains a starter template for creating a bot on Bluesky. In this example, the bot posts a smiley emoji on an automated schedule once every three hours.
 
-It uses the [`@atproto/lex`](https://github.com/bluesky-social/atproto/tree/main/packages/lex) stack: type-safe Lexicon tooling that generates TypeScript for the records you use. Because the bot authenticates with an App Password, it uses [`@atproto/lex-password-session`](https://github.com/bluesky-social/atproto/tree/main/packages/lex/lex-password-session) to log in and a [`@atproto/lex-client`](https://github.com/bluesky-social/atproto/tree/main/packages/lex/lex-client) `Client` to write the post.
+It uses the [`@atproto/lex`](https://github.com/bluesky-social/atproto/tree/main/packages/lex) stack: type-safe Lexicon tooling that generates TypeScript for the records you use. Because the bot authenticates with an App Password, it uses [`@atproto/lex-password-session`](https://github.com/bluesky-social/atproto/tree/main/packages/lex/lex-password-session) to log in and the `Client` from `@atproto/lex` to write the post.
 
 ## Set Up
 
-1. Install dependencies: `npm install`
-2. Make a copy of the example `.env` file: `cp example.env .env`. Set your username and password in `.env`. **Use an [App Password](https://bsky.app/settings/app-passwords)**, not your main account password.
+1. Make sure you're on Node.js 24 or newer (`node --version`). The bot runs its TypeScript directly using Node's built-in [type stripping](https://nodejs.org/api/typescript.html), so no transpiler is needed.
+2. Install dependencies: `npm install`
+3. Make a copy of the example `.env` file: `cp example.env .env`. Set your username and password in `.env`. **Use an [App Password](https://bsky.app/settings/app-passwords)**, not your main account password.
 
 ## Running the bot
 
@@ -34,7 +35,7 @@ Useful scripts:
 | --- | --- |
 | `npm start` | Generate lexicons, then run the bot |
 | `npm run build` | Regenerate `src/lexicons/` from `lexicons/` |
-| `npm run typecheck` | Type-check without running (`tsc --noEmit`) |
+| `npm run typecheck` | Type-check without running (`tsc`) |
 | `npm run lexicons` | Re-fetch the Lexicon JSON into `lexicons/` |
 
 ## Deploying your bot
