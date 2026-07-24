@@ -24,9 +24,10 @@ const scope = 'atproto account:email rpc:*?aud=did:web:api.bsky.app#bsky_appview
 
 const redirectUri = `http://127.0.0.1:${window.location.port}/sign-in`
 
-const clientId =
-  `http://localhost?redirect_uri=${encodeURIComponent(redirectUri)}` +
-  `&scope=${encodeURIComponent(scope)}`
+const clientIdUrl = new URL('http://localhost')
+clientIdUrl.searchParams.set('redirect_uri', redirectUri)
+clientIdUrl.searchParams.set('scope', scope)
+const clientId = clientIdUrl.href
 
 export const oauthClient = new ExpoOAuthClient({
   handleResolver: 'https://bsky.social',

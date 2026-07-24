@@ -79,15 +79,17 @@ The `SessionContext` context provides a `signIn(input)` method that can be used 
 
 ### Making authenticated requests
 
-This project uses the [`@atproto/lex`](https://github.com/bluesky-social/atproto/tree/main/packages/lex) client stack for API calls. Once a user is signed in, you can create a [`@atproto/lex-client`](https://github.com/bluesky-social/atproto/tree/main/packages/lex/lex-client) `Client` from the OAuth session. An `OAuthSession` already satisfies lex-client's `Agent` interface (it exposes `did` and `fetchHandler`), so it can be passed straight into `new Client(session)` with no adapter.
+This project uses the [`@atproto/lex`](https://github.com/bluesky-social/atproto/tree/main/packages/lex) client stack for API calls. Once a user is signed in, you can create a `Client` (imported from `@atproto/lex`) from the OAuth session. An `OAuthSession` already satisfies the client's `Agent` interface (it exposes `did` and `fetchHandler`), so it can be passed straight into `new Client(session)` with no adapter.
 
-The `PdsAgentProvider` component in `components/PdsAgentProvider.tsx` creates a `Client` that makes authenticated requests directly to the user's PDS.
+The `ClientProvider` component in `components/ClientProvider.tsx` creates a single `Client` that covers both the user's PDS and the Bluesky appview. It is constructed with the `service: 'did:web:api.bsky.app#bsky_appview'` option, which routes requests through the user's PDS to the appview (by setting the `atproto-proxy` header):
 
-The `BskyAgentProvider` component in `components/BskyAgentProvider.tsx` creates a `Client` for the Bluesky appview: an unauthenticated one against the public API (`https://api.bsky.app`), and — when signed in — one that proxies through the user's PDS by passing the `service: 'did:web:api.bsky.app#bsky_appview'` option (which sets the `atproto-proxy` header).
+- Plain xrpc calls made with `client.call(...)` are proxied to the appview.
+- Record sugar methods like `client.create(...)` are never proxied and always target the user's PDS.
+- Any other call can opt out of proxying with a per-call `service: null` option (the app does this for `com.atproto.server.getSession`, which the PDS answers itself).
 
 Requests are made with `client.call(schema, params)`, e.g. `client.call(app.bsky.actor.getProfile, { actor })`, where `schema` comes from the generated lexicons (see below). `client.call(...)` resolves to the response body directly.
 
-An example of using both clients can be found in `app/(authenticated)/index.tsx`.
+An example of using the client can be found in `app/(authenticated)/index.tsx`.
 
 ### Lexicon codegen
 

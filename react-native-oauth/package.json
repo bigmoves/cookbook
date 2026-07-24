@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "scripts": {
     "lexicons": "lex install app.bsky.actor.getProfile com.atproto.server.getSession",
-    "codegen": "lex build --index-file --clear",
+    "codegen": "lex build --index-file --clear --import-ext \"\"",
     "typecheck": "tsc --noEmit",
     "prestart": "npm run codegen",
     "preandroid": "npm run codegen",
@@ -19,7 +19,6 @@
   },
   "dependencies": {
     "@atproto/lex": "^0.3.0",
-    "@atproto/lex-client": "^0.3.0",
     "@atproto/oauth-client-expo": "^0.1.8",
     "@expo/metro-runtime": "~6.1.2",
     "@expo/vector-icons": "^15.0.2",

@@ -1,8 +1,8 @@
+import { type AtIdentifierString } from '@atproto/lex'
 import { useQuery } from '@tanstack/react-query'
 import { Button, Image, Text, View } from 'react-native'
 import { app, com } from '@/src/lexicons'
-import { useBskyAgent } from '@/components/BskyAgentProvider'
-import { usePdsAgent } from '@/components/PdsAgentProvider'
+import { useClient } from '@/components/ClientProvider'
 import { useOAuthSession, useSession } from '@/components/SessionProvider'
 
 /**
@@ -50,18 +50,19 @@ function AccountInfo() {
 }
 
 function useGetSessionQuery() {
-  const client = usePdsAgent()
+  const client = useClient()
 
   return useQuery({
-    queryKey: [client.agent.did, 'session'] as const,
+    queryKey: [client.assertDid, 'session'] as const,
     queryFn: async ({ signal }) => {
-      // `client.call(...)` resolves to the response body directly.
-      return client.call(com.atproto.server.getSession, {}, { signal })
+      // `service: null` opts this call out of the client's appview proxying:
+      // getSession is answered by the user's PDS itself.
+      return client.call(com.atproto.server.getSession, {}, { signal, service: null })
     },
   })
 }
 
-function ProfileCard({ actor }: { actor: string }) {
+function ProfileCard({ actor }: { actor: AtIdentifierString }) {
   const { data } = useProfileQuery(actor)
 
   return (
@@ -92,16 +93,13 @@ function ProfileCard({ actor }: { actor: string }) {
   )
 }
 
-function useProfileQuery(actor: string) {
-  const client = useBskyAgent()
+function useProfileQuery(actor: AtIdentifierString) {
+  const client = useClient()
 
   return useQuery({
     queryKey: ['profile', actor] as const,
     queryFn: async ({ signal }) => {
-      // `actor` is a DID or handle; brand it as the lexicon's at-identifier
-      // type (the schema still validates it at runtime).
-      const params = { actor: actor as app.bsky.actor.getProfile.$Params['actor'] }
-      return client.call(app.bsky.actor.getProfile, params, { signal })
+      return client.call(app.bsky.actor.getProfile, { actor }, { signal })
     },
   })
 }
